@@ -5,6 +5,7 @@ pipeline {
    stages {
       stage('Download SOA Deployment Tempplate') {
          steps {
+             sh label: '', script: 'cd /var/lib/jenkins/workspace/DevOps/ERP/AnsiblePlaybooks/'
              ansiblePlaybook extras: '--user=\'opc\' --tags fetch_wmi --e="domain=\'SCHDSOAC_domain\' hosts=\'MFT\' env=\'DEV\'"', installation: 'Ansible', inventory: 'roles/WebLogic/host', playbook: 'main.yml'
          
            }
