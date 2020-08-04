@@ -1,0 +1,35 @@
+pipeline {
+   agent any
+
+
+   stages {
+      stage('Download SOA Deployment Tempplate') {
+         steps {
+             ansiblePlaybook extras: '--user=\'opc\' --tags fetch_wmi --e="domain=\'SCHDSOAC_domain\' hosts=\'MFT\' env=\'DEV\'"', installation: 'Ansible', inventory: 'roles/WebLogic/host', playbook: 'main.yml'
+         
+           }
+      }
+       stage('Download Artefacts from BitBucket ') {
+          steps{
+             sh label: '', script: '''cd /var/lib/jenkins/workspace/DevOps/ERP/scripts
+             python3 downloadArtefacts_WMI.py'''
+          }
+      }
+       stage('Create Scripts and Copy to Remote AdminServer'){
+           steps{
+             ansiblePlaybook extras: '--e="env=\'DEV\'" --tags createScript', installation: 'Ansible', playbook: 'roles/WebLogic/template.yml'
+             ansiblePlaybook extras: '--user=\'opc\'  --tags copySOA --e="domain=\'SCHDSOAC_domain\' hosts=\'DEV\'"', installation: 'Ansible', inventory: 'roles/WebLogic/host', playbook: 'main.yml'  
+           }
+
+       }
+
+       stage('Deploy SOA via WLST') {
+           steps{
+              ansiblePlaybook extras: '--user=\'opc\' --tags deploySOA --e="domain=\'SCHDSOAC_domain\' hosts=\'DEV\'"', installation: 'Ansible', inventory: 'roles/WebLogic/host', playbook: 'main.yml'
+           }
+
+       }
+         
+      }
+   }
+
